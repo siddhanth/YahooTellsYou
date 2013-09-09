@@ -11,5 +11,8 @@
 	<classpathentry kind="lib" path="lib/commons-net-2.0-patched.jar"/>
 	<classpathentry kind="lib" path="lib/commons-lang-2.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/azure-bing-search-java-0.12.0.jar"/>
+	<classpathentry kind="lib" path="/Users/sjain7/Downloads/zemapi-februar2012-java/zemapi-java.jar"/>
+	<classpathentry kind="lib" path="lib/zemapi-java.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

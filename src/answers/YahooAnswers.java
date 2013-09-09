@@ -78,7 +78,7 @@ public class YahooAnswers {
 			System.err.println("Error:" + e.getMessage());
 		}
 
-		query = "killed mahatma gandhi";
+		query = "who killed mahatma gandhi";
 		for (int i = 0; i < args.length; i++) {
 			query += args[i].toLowerCase().replaceAll("[^a-zA-Z0-9]+", " ")
 					.trim()

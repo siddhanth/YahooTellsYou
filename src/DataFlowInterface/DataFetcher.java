@@ -1,11 +1,9 @@
-package com.data;
+package DataFlowInterface;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.httpclient.HttpException;
-
-import DataFlowInterface.RawData;
 
 public interface DataFetcher {
     /*

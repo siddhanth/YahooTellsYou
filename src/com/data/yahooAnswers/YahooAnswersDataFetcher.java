@@ -1,4 +1,4 @@
-package com.data;
+package com.data.yahooAnswers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +23,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import DataFlowInterface.DataFetcher;
 import DataFlowInterface.RawData;
 
 

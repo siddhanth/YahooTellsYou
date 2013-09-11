@@ -1,4 +1,4 @@
-package com.data;
+package com.data.yahooAnswers;
 
 import java.util.Comparator;
 import java.util.Map;

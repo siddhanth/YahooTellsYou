@@ -13,7 +13,7 @@ import java.util.Map;
  * @author sjain7
  * 
  */
-public class ProcessedData extends RawData {
+public class ProcessedData {
 
 	Map<String, Integer> entities;
 

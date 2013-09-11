@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,24 +30,32 @@ import DataFlowInterface.RawData;
 
 public class YahooAnswersDataFetcher implements DataFetcher{
 	
-	public RawData getResult(String query) {
-		RawData rawData = null;
+	@Override
+	public List<RawData> getResult(String query) {
 		String request = getRequest(query);
 		InputStream rstream = null;
+		List<RawData> rawDataList = null;
 		try {
 			rstream = postRequest(request);
+			rawDataList = populateData(query, rstream);
 		} catch(IOException ioException){
-			
+			ioException.printStackTrace();
 		}
 		
+		return rawDataList;
+	}
+	
+	
+	
+	private List<RawData> populateData(String query, InputStream rstream) {
+		List<RawData> rawDataList = null;
 		if(rstream != null){
+			rawDataList = new ArrayList<RawData>();
 			// Process response
 			Document response = null;
 			try {
-				response = DocumentBuilderFactory.newInstance()
-						.newDocumentBuilder().parse(rstream);
+				response = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(rstream);
 			} catch (SAXException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -73,47 +82,35 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 			String questions = "";
 			// int length = nl.getLength();
 			HashMap<String, String> questID = new HashMap<String, String>();
-			HashMap<String, String> IDanswer = new HashMap<String, String>();
+			HashMap<String, String> answerID = new HashMap<String, String>();
+			
 			for (int i = 0; i < nodeCount; i++) {
 				// Get each xpath expression as a string
 				String title = null;
+				String summary = null;
+				String url = null;
+				String chosenid = null;
 				try {
 					title = (String) xPath.evaluate("Subject",
 							nodes.item(i), XPathConstants.STRING);
-				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				String summary = null;
-				try {
+				
 					summary = (String) xPath.evaluate("ChosenAnswer",
 							nodes.item(i), XPathConstants.STRING);
-				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				try {
-					String chosenid = (String) xPath.evaluate("ChosenAnswerId",
+					chosenid = (String) xPath.evaluate("ChosenAnswerId",
 							nodes.item(i), XPathConstants.STRING);
-				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				String url = null;
-				try {
 					url = (String) xPath.evaluate("Url", nodes.item(i),
 							XPathConstants.STRING);
 				} catch (XPathExpressionException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				
 				// print out the Title, Summary, and URL for each search result
 				System.out.println("Question: " + title);
 				questions += title + '~';
 				SecureRandom random = new SecureRandom();
 				String hash = new BigInteger(130, random).toString(32);
 				questID.put(title, hash);
-				IDanswer.put(hash, summary);
+				answerID.put(hash, summary);
 				System.out.println("URL: " + url);
 				answers += summary + " oNeMoRe ";
 				System.out.println("-----------");
@@ -147,16 +144,18 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 				if (++count > 10)
 					break;
 				// System.out.println(key);
-				answerscore.put(IDanswer.get(questID.get(key)).toLowerCase(),
+				answerscore.put(answerID.get(questID.get(key)).toLowerCase(),
 						score.get(key));
 				// System.out.println(IDanswer.get(questID.get(key)));
-				answers += key + " " + IDanswer.get(questID.get(key))
+				answers += key + " " + answerID.get(questID.get(key))
 						+ " oNeMoRe ";
 			}
 		}
-		return rawData;
+		return rawDataList;
 	}
-	
+
+
+
 	@Override
 	public String getRequest(String query) {
 		String request = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20answers.search%20where%20query%3D'AND%20(%22"

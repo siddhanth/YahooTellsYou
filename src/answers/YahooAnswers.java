@@ -96,6 +96,8 @@ public class YahooAnswers {
 		// + "%22%20and%20type%3D%22resolved%22&diagnostics=true";
 
 		System.out.println(request);
+		System.out.println("------------------------------------------");
+		
 		HttpClient client = new HttpClient();
 		GetMethod method = new GetMethod(request);
 

@@ -49,16 +49,16 @@ public class Penalizer {
 		for (String keywords : queryString.split("\\s+")) {
 			keywordMap.put(keywords, true);
 		}
+		
 		HashMap<RawData, Double> questScore = new HashMap<RawData, Double>();
 		for (RawData data : rawDataList) {
 			score = 0;
-			String ques = filterStopWords(data.getQuestion()).replaceAll("[^a-zA-Z0-9]+",
-					" ");
+			String ques = filterStopWords(data.getQuestion()).replaceAll("[^a-zA-Z0-9]+", " ");
 			for (String word : ques.split("\\s+")) {
 				if (keywordMap.containsKey(word)) {
 					score += 1;
 				} else {
-					score -= 0.25;
+					score -= 0.1;
 				}
 			}
 			questScore.put(data, score);

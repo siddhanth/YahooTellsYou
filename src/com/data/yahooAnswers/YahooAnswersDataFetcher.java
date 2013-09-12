@@ -46,13 +46,10 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 		return rawDataList;
 	}
 	
-	
-	
 	private List<RawData> populateData(String query, InputStream rstream) {
 		List<RawData> rawDataList = null;
-		System.out.println("Query::"+query);
+		//System.out.println("Query::"+query);
 		if(rstream != null){
-			
 			// Process response
 			Document response = null;
 			try {
@@ -65,6 +62,7 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 				e.printStackTrace();
 			}
 
+			//System.out.println("RS Stream::" + response);
 			
 			rawDataList = getRawData(response);
 			rawDataList = getSortedAndRankedData(query, rawDataList);
@@ -77,19 +75,27 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 		Penalizer penalizer = new Penalizer();
 		HashMap<RawData, Double> score = penalizer.penalize(rawDataList, query
 				.replaceAll("%20", " ").trim());
+		
 		ArrayList<RawData> keys = new ArrayList<RawData>();
 		for (RawData key : score.keySet()) {
+			System.out.println(score.get(key));
 			if (score.get(key) <= 0) {
 				keys.add(key);
 			}
 		}
+
 		for (RawData key : keys) {
-			// System.out.println(key);
 			score.remove(key);
 		}
-		if (score.size() < 3) {
+		
+		if (score.size() < 2.5) {
 			System.out.println("Hmm, guess we don't know ! Wanna <a href=\"http://answers.yahoo.com/\">ask</a>?");
 			System.exit(0);
+		}
+		
+		
+		for(int i=0; i< rawDataList.size(); i++) {
+		//	System.out.println(rawDataList.get(i).getAnswer());
 		}
 		
 		ValueComparator bvc = new ValueComparator(score);
@@ -100,8 +106,10 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 		
 		int size = sorted_map.size();
 		for(RawData key:sorted_map.keySet()){
+			System.out.println("Answer::" + key.getAnswer());
 			sortedRawDataList.add(key);
 		}
+		
 		return sortedRawDataList;
 	}
 
@@ -143,26 +151,22 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 			}
 			
 			// print out the Title, Summary, and URL for each search result
-			System.out.println("Question: " + data.getQuestion());
+			//System.out.println("Question: " + data.getQuestion());
 			
 			
 			//SecureRandom random = new SecureRandom();
 			//String hash = new BigInteger(130, random).toString(32);
-			
-			System.out.println("URL: " + data.getUrl());
-			System.out.println("-----------");
 			rawDataList.add(data);
 		}
 		return rawDataList;
 	}
-
-
 
 	@Override
 	public String getRequest(String query) {
 		String request = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20answers.search%20where%20query%3D'AND%20(%22"
 				+ query.replaceAll(" ", "%20")
 				+ "%22)'%20and%20type%3D%22resolved%22&diagnostics=true";
+		
 		return request;
 	}
 
@@ -176,6 +180,7 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 			System.err.println("Method failed: " + method.getStatusLine());
 			return null;
 		} else {
+			//System.out.println(method.getResponseBodyAsString());
 			return method.getResponseBodyAsStream();
 		}
 	}

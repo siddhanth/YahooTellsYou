@@ -7,6 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.List;
+
+import DataFlowInterface.RawData;
 
 public class Penalizer {
 	private final String delimiter = "~";
@@ -16,7 +19,6 @@ public class Penalizer {
 	 * @param args
 	 */
 	public Penalizer() {
-		// TODO Auto-generated method stub
 		stopWords = new HashMap<String, Boolean>();
 		try {
 			FileInputStream fstream = new FileInputStream("stopwords.txt");
@@ -39,7 +41,7 @@ public class Penalizer {
 
 	}
 
-	public HashMap<String, Double> penalize(String questions, String queryString) {
+	public HashMap<RawData, Double> penalize(List<RawData> rawDataList, String queryString) {
 		// String
 		// questions="who is our first president of india?~Who was the first president of india?";
 		double score = 0;
@@ -47,12 +49,11 @@ public class Penalizer {
 		for (String keywords : queryString.split("\\s+")) {
 			keywordMap.put(keywords, true);
 		}
-		HashMap<String, Double> questScore = new HashMap<String, Double>();
-		for (String question : questions.split(delimiter)) {
+		HashMap<RawData, Double> questScore = new HashMap<RawData, Double>();
+		for (RawData data : rawDataList) {
 			score = 0;
-			String ques = filterStopWords(question).replaceAll("[^a-zA-Z0-9]+",
+			String ques = filterStopWords(data.getQuestion()).replaceAll("[^a-zA-Z0-9]+",
 					" ");
-			// String ques =question;
 			for (String word : ques.split("\\s+")) {
 				if (keywordMap.containsKey(word)) {
 					score += 1;
@@ -60,7 +61,7 @@ public class Penalizer {
 					score -= 0.25;
 				}
 			}
-			questScore.put(question, score);
+			questScore.put(data, score);
 		}
 		return questScore;
 	}

@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -49,8 +50,9 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 	
 	private List<RawData> populateData(String query, InputStream rstream) {
 		List<RawData> rawDataList = null;
+		System.out.println("Query::"+query);
 		if(rstream != null){
-			rawDataList = new ArrayList<RawData>();
+			
 			// Process response
 			Document response = null;
 			try {
@@ -63,93 +65,93 @@ public class YahooAnswersDataFetcher implements DataFetcher{
 				e.printStackTrace();
 			}
 
-			XPathFactory factory = XPathFactory.newInstance();
-			XPath xPath = factory.newXPath();
-			// Get all search Result nodes
-			NodeList nodes = null;
-			int nodeCount = 0;
 			
+			rawDataList = getRawData(response);
+			rawDataList = getSortedAndRankedData(query, rawDataList);
+		}
+		return rawDataList;
+	}
+
+
+	private List<RawData> getSortedAndRankedData(String query, List<RawData> rawDataList) {
+		Penalizer penalizer = new Penalizer();
+		HashMap<RawData, Double> score = penalizer.penalize(rawDataList, query
+				.replaceAll("%20", " ").trim());
+		ArrayList<RawData> keys = new ArrayList<RawData>();
+		for (RawData key : score.keySet()) {
+			if (score.get(key) <= 0) {
+				keys.add(key);
+			}
+		}
+		for (RawData key : keys) {
+			// System.out.println(key);
+			score.remove(key);
+		}
+		if (score.size() < 3) {
+			System.out.println("Hmm, guess we don't know ! Wanna <a href=\"http://answers.yahoo.com/\">ask</a>?");
+			System.exit(0);
+		}
+		
+		ValueComparator bvc = new ValueComparator(score);
+		TreeMap<RawData, Double> sorted_map = new TreeMap(bvc);
+		sorted_map.putAll(score);
+		
+		List<RawData> sortedRawDataList = new ArrayList<RawData>();
+		
+		int size = sorted_map.size();
+		for(RawData key:sorted_map.keySet()){
+			sortedRawDataList.add(key);
+		}
+		return sortedRawDataList;
+	}
+
+
+
+	private ArrayList<RawData> getRawData(Document response) {
+		ArrayList<RawData> rawDataList = new ArrayList<RawData>();
+		XPathFactory factory = XPathFactory.newInstance();
+		XPath xPath = factory.newXPath();
+		// Get all search Result nodes
+		NodeList nodes = null;
+		int nodeCount = 0;
+		
+		try {
+			nodes = (NodeList) xPath.evaluate("query/results/Question", response, XPathConstants.NODESET);
+			nodeCount = nodes.getLength();
+		} catch (XPathExpressionException e) {
+			e.printStackTrace();
+		}
+		
+		// iterate over search Result nodes		
+		// int length = nl.getLength();
+		
+		for (int i = 0; i < nodeCount; i++) {
+			RawData data = new RawData();
+			// Get each xpath expression as a string
 			try {
-				nodes = (NodeList) xPath.evaluate(
-						"query/results/Question", response, XPathConstants.NODESET);
-				nodeCount = nodes.getLength();
+				String title = (String) xPath.evaluate("Subject",nodes.item(i), XPathConstants.STRING);
+				data.setQuestion(title);
+				
+				String summary = (String) xPath.evaluate("ChosenAnswer",nodes.item(i), XPathConstants.STRING);
+				data.setAnswer(summary);
+				
+				String url = (String) xPath.evaluate("Url", nodes.item(i),XPathConstants.STRING);
+				data.setUrl(url);
+				
 			} catch (XPathExpressionException e) {
 				e.printStackTrace();
 			}
 			
-			// iterate over search Result nodes
-			String answers = "";
-			String questions = "";
-			// int length = nl.getLength();
-			HashMap<String, String> questID = new HashMap<String, String>();
-			HashMap<String, String> answerID = new HashMap<String, String>();
-			
-			for (int i = 0; i < nodeCount; i++) {
-				// Get each xpath expression as a string
-				String title = null;
-				String summary = null;
-				String url = null;
-				String chosenid = null;
-				try {
-					title = (String) xPath.evaluate("Subject",
-							nodes.item(i), XPathConstants.STRING);
-				
-					summary = (String) xPath.evaluate("ChosenAnswer",
-							nodes.item(i), XPathConstants.STRING);
-					chosenid = (String) xPath.evaluate("ChosenAnswerId",
-							nodes.item(i), XPathConstants.STRING);
-					url = (String) xPath.evaluate("Url", nodes.item(i),
-							XPathConstants.STRING);
-				} catch (XPathExpressionException e) {
-					e.printStackTrace();
-				}
-				
-				// print out the Title, Summary, and URL for each search result
-				System.out.println("Question: " + title);
-				questions += title + '~';
-				SecureRandom random = new SecureRandom();
-				String hash = new BigInteger(130, random).toString(32);
-				questID.put(title, hash);
-				answerID.put(hash, summary);
-				System.out.println("URL: " + url);
-				answers += summary + " oNeMoRe ";
-				System.out.println("-----------");
-			}
+			// print out the Title, Summary, and URL for each search result
+			System.out.println("Question: " + data.getQuestion());
 			
 			
-			Penalizer penalizer = new Penalizer();
-			HashMap<String, Double> score = penalizer.penalize(questions, query
-					.replaceAll("%20", " ").trim());
-			ArrayList<String> keys = new ArrayList<String>();
-			for (String key : score.keySet()) {
-				if (score.get(key) <= 0) {
-					keys.add(key);
-				}
-			}
-			for (String key : keys) {
-				// System.out.println(key);
-				score.remove(key);
-			}
-			if (score.size() < 3) {
-				System.out.println("Hmm, guess we don't know ! Wanna <a href=\"http://answers.yahoo.com/\">ask</a>?");
-				System.exit(0);
-			}
-			ValueComparator bvc = new ValueComparator(score);
-			TreeMap<String, Double> sorted_map = new TreeMap(bvc);
-			sorted_map.putAll(score);
-			int count = 0;
-			HashMap<String, Double> answerscore = new HashMap<String, Double>();
-			answers = query + " qUeStIoNbReAk ";
-			for (String key : sorted_map.keySet()) {
-				if (++count > 10)
-					break;
-				// System.out.println(key);
-				answerscore.put(answerID.get(questID.get(key)).toLowerCase(),
-						score.get(key));
-				// System.out.println(IDanswer.get(questID.get(key)));
-				answers += key + " " + answerID.get(questID.get(key))
-						+ " oNeMoRe ";
-			}
+			//SecureRandom random = new SecureRandom();
+			//String hash = new BigInteger(130, random).toString(32);
+			
+			System.out.println("URL: " + data.getUrl());
+			System.out.println("-----------");
+			rawDataList.add(data);
 		}
 		return rawDataList;
 	}

@@ -12,7 +12,7 @@ public class RawData {
 	private String url;
 	private String question;
 	private String answer;
-
+	
 	public String getUrl() {
 		return url;
 	}

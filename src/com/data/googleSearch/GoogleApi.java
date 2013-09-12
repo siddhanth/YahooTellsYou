@@ -14,7 +14,7 @@ public class GoogleApi {
 
 	public static void main(String[] args) throws ParseException,
 			MalformedURLException, Exception {
-		String query = "who killed mahatma gandhi";
+		String query = "who killed mahatma gandhi in india";
 		fetchResults(query);
 	}
 

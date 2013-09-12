@@ -1,4 +1,4 @@
-package SearchApi;
+package com.data.bingSearch;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

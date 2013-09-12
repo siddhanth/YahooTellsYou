@@ -1,4 +1,4 @@
-package SearchApi;
+package com.data.googleSearch;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
